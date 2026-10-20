@@ -1,16 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run build --workspace=@hotelops/web",
-  "devCommand": "npm run dev --workspace=@hotelops/web",
-  "installCommand": "npm install",
   "framework": "nextjs",
-  "outputDirectory": "apps/web/.next/standalone",
+  "outputDirectory": ".next/standalone",
   "regions": ["iad1"],
-  "functions": {
-    "apps/web/**/*.ts": {
-      "maxDuration": 30
-    }
-  },
   "headers": [
     {
       "source": "/(.*)",
