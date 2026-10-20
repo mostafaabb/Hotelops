@@ -1,0 +1,136 @@
+version: "3.9"
+
+# Production Docker Compose with Caddy Reverse Proxy
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Requires: .env file with production values
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: hotelops-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+      - web
+    networks:
+      - hotelops-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: hotelops-api
+    restart: unless-stopped
+    expose:
+      - "4000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      DIRECT_URL: ${DIRECT_URL}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      NODE_ENV: production
+      CORS_ORIGIN: https://${DOMAIN}
+    volumes:
+      - uploads:/app/apps/api/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hotelops-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:4000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: hotelops-web
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      NEXT_PUBLIC_API_URL: https://${DOMAIN}/api/v1
+      NEXT_PUBLIC_WS_URL: https://${DOMAIN}
+    networks:
+      - hotelops-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  db:
+    image: postgres:16-alpine
+    container_name: hotelops-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-hotelops}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-hotelops}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - hotelops-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-hotelops} -d ${DB_NAME:-hotelops}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: hotelops-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redisdata:/data
+    networks:
+      - hotelops-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    image: node:20-alpine
+    container_name: hotelops-migrate
+    working_dir: /app
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-hotelops}:${DB_PASSWORD}@db:5432/${DB_NAME:-hotelops}?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: sh -c "npm ci --ignore-scripts && npx prisma migrate deploy && npx prisma db seed"
+    profiles:
+      - setup
+
+networks:
+  hotelops-network:
+    driver: bridge
+
+volumes:
+  pgdata:
+  redisdata:
+  uploads:
+  caddy_data:
+  caddy_config:

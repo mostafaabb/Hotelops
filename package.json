@@ -1,0 +1,49 @@
+{
+  "name": "hotelops",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HotelOps - Modern hotel management & operations platform",
+  "scripts": {
+    "build": "npm run build --workspace=@hotelops/api && npm run build --workspace=@hotelops/web",
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev --workspace=@hotelops/api\" \"npm run dev --workspace=@hotelops/web\"",
+    "dev:api": "npm run dev --workspace=@hotelops/api",
+    "dev:web": "npm run dev --workspace=@hotelops/web",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:unit": "npm run test:unit --workspaces --if-present",
+    "test:integration": "npm run test:integration --workspace=@hotelops/api",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:seed": "prisma db seed",
+    "db:push": "prisma db push",
+    "db:reset": "prisma migrate reset --force",
+    "setup": "npm install && npm run prisma:generate && npm run prisma:deploy && npm run prisma:seed"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.mjs"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "prettier": "^3.4.2",
+    "prisma": "^6.2.1",
+    "typescript": "^5.7.3"
+  },
+  "overrides": {
+    "rxjs": "7.8.2",
+    "recharts": "^2.15.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3"
+  }
+}

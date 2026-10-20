@@ -1,0 +1,56 @@
+# Fly.io Configuration for HotelOps API
+# Run: flyctl launch --no-deploy (from project root)
+# Then: flyctl deploy
+
+app = "hotelops-api"
+primary_region = "iad"  # Change to your preferred region: iad, ord, lax, sea, lhr, ams, fra, hkg, nrt, syd
+
+[build]
+  dockerfile = "Dockerfile.api"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "4000"
+  # These will be set via flyctl secrets set (not stored here):
+  # DATABASE_URL
+  # DIRECT_URL
+  # REDIS_URL
+  # JWT_SECRET
+  # JWT_REFRESH_SECRET
+  # CORS_ORIGIN
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    path = "/api/v1/health"
+    timeout = "5s"
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[mounts]
+  source = "hotelops_data"
+  destination = "/app/apps/api/uploads"
+
+# Optional: Scale configuration
+# [services]
+#   [[services.ports]]
+#     port = 80
+#     handlers = ["http"]
+#   [[services.ports]]
+#     port = 443
+#     handlers = ["http", "tls"]
+#   [[services.tcp_checks]]
+#     interval = 15000
+#     timeout = 2000

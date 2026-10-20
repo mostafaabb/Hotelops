@@ -1,0 +1,48 @@
+name: Deploy API to Fly.io
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/api/**'
+      - 'prisma/**'
+      - 'Dockerfile.api'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/deploy-api.yml'
+  workflow_dispatch:
+
+env:
+  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+  APP_NAME: hotelops-api
+
+jobs:
+  deploy:
+    name: Deploy API
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Fly.io CLI
+        uses: superfly/flyctl-actions@setup-flyctl
+        with:
+          version: 'latest'
+
+      - name: Deploy to Fly.io
+        run: flyctl deploy --remote-only --app ${{ env.APP_NAME }}
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Run Migrations
+        if: success()
+        run: flyctl ssh console --app ${{ env.APP_NAME }} -C "npx prisma migrate deploy"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Verify Deployment
+        if: success()
+        run: |
+          sleep 10
+          curl -f https://${{ env.APP_NAME }}.fly.dev/api/v1/health || exit 1
