@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "outputDirectory": ".next/standalone",
+  "outputDirectory": "apps/web/.next/standalone",
   "regions": ["iad1"],
   "headers": [
     {
