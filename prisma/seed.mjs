@@ -187,6 +187,12 @@ async function main() {
     }
   }
 
+  // Attach the generated rooms to each hotel so createReservation() can look
+  // them up (it reads hotel.rooms when picking an assignable room).
+  for (const def of hotels) {
+    def.rooms = roomsByHotel[def.hotel.id];
+  }
+
   // ---- USERS & STAFF ----
   const departments = [];
   for (const d of ['Front Office', 'Housekeeping', 'Engineering', 'Food & Beverage', 'Sales & Marketing', 'Accounting']) {
@@ -452,8 +458,9 @@ async function main() {
     const total = round(subtotal + taxes);
 
     let room = null;
+    const hotelRooms = hotel.rooms ?? [];
     if (o.needRoom) {
-      const candidates = hotel.rooms.filter((rr) => rr.rt.id === o.rt.id);
+      const candidates = hotelRooms.filter((rr) => rr.rt.id === o.rt.id);
       for (const cand of candidates) {
         if (canAssign(hotel.hotel.id, cand.room.id, checkIn, checkOut)) {
           room = cand;
@@ -461,7 +468,7 @@ async function main() {
         }
       }
     } else {
-      for (const cand of hotel.rooms) {
+      for (const cand of hotelRooms) {
         if (canAssign(hotel.hotel.id, cand.room.id, checkIn, checkOut)) {
           room = cand;
           break;
