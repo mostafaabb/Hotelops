@@ -7,7 +7,7 @@
     "build": "npm run build --workspace=@hotelops/api && npm run build --workspace=@hotelops/web",
     "build:api": "npm run build --workspace=@hotelops/api",
     "start:api": "node apps/api/dist/main.js",
-    "postinstall": "prisma generate",
+    "postinstall": "node scripts/postinstall.mjs",
     "dev": "concurrently -n api,web -c blue,green \"npm run dev --workspace=@hotelops/api\" \"npm run dev --workspace=@hotelops/web\"",
     "dev:api": "npm run dev --workspace=@hotelops/api",
     "dev:web": "npm run dev --workspace=@hotelops/web",

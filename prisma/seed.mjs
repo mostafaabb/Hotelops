@@ -163,7 +163,9 @@ async function main() {
           data: { buildingId: building.id, name: `Floor ${f}`, number: f },
         });
         for (let r = 1; r <= def.roomsPerFloor; r++) {
-          const roomNumber = `${String(f).padStart(2, '0')}${String(r).padStart(2, '0')}`;
+          // Building prefix keeps room numbers unique per hotel (the unique key
+          // is hotelId + roomNumber); without it each building reuses 0101-0808.
+          const roomNumber = `${b + 1}${f}${String(r).padStart(2, '0')}`;
           const rt = pick(roomTypes);
           const room = await prisma.room.create({
             data: {
