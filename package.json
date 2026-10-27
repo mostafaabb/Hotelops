@@ -22,6 +22,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:seed": "prisma db seed",
+    "prisma:seed-if-empty": "node prisma/seed-if-empty.mjs",
     "db:push": "prisma db push",
     "db:reset": "prisma migrate reset --force",
     "setup": "npm install && npm run prisma:generate && npm run prisma:deploy && npm run prisma:seed"
