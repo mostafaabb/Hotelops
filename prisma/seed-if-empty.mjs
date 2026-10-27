@@ -10,14 +10,23 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 try {
-  const userCount = await prisma.user.count();
+  const [userCount, reservationCount] = await Promise.all([
+    prisma.user.count(),
+    prisma.reservation.count(),
+  ]);
 
-  if (userCount > 0) {
-    console.log(`[seed] Database already has ${userCount} user(s) - skipping seed.`);
+  // Both must exist: an interrupted seed can leave users behind without any
+  // reservations, in which case we want to run again (the seed wipes first).
+  if (userCount > 0 && reservationCount > 0) {
+    console.log(
+      `[seed] Database already seeded (${userCount} users, ${reservationCount} reservations) - skipping seed.`
+    );
     process.exit(0);
   }
 
-  console.log('[seed] Database is empty - running seed...');
+  console.log(
+    `[seed] Database is not fully seeded (${userCount} users, ${reservationCount} reservations) - running seed...`
+  );
   const result = spawnSync(process.execPath, ['prisma/seed.mjs'], { stdio: 'inherit' });
 
   if (result.status !== 0) {
