@@ -21,16 +21,10 @@ param()
 
 $ErrorActionPreference = "Stop"
 
-# Colors
-$Green = "`e[32m"
-$Yellow = "`e[33m"
-$Red = "`e[31m"
-$Reset = "`e[0m"
-
-function Write-Success { param($msg) Write-Host "${Green}✓${Reset} $msg" }
-function Write-Warning { param($msg) Write-Host "${Yellow}⚠${Reset} $msg" }
-function Write-ErrorMsg { param($msg) Write-Host "${Red}❌${Reset} $msg" }
-function Write-Header { param($msg) Write-Host "`n${Yellow}$msg${Reset}`n" + ("-" * $msg.Length) }
+function Write-Success { param($msg) Write-Host "`e[32m[OK]`e[0m $msg" }
+function Write-Warning { param($msg) Write-Host "`e[33m[WARN]`e[0m $msg" }
+function Write-ErrorMsg { param($msg) Write-Host "`e[31m[ERROR]`e[0m $msg" }
+function Write-Header { param($msg) Write-Host "`n`e[33m$msg`e[0m`n" + ("-" * $msg.Length) }
 
 function Check-Command {
     param($name, $installHint = "")
@@ -41,7 +35,7 @@ function Check-Command {
     Write-Success "$name found"
 }
 
-Write-Header "🏨 HotelOps Deployment Setup"
+Write-Header "HotelOps Deployment Setup"
 
 # Check prerequisites
 Write-Host "Checking prerequisites..."
@@ -52,7 +46,7 @@ Check-Command openssl "Included in Git for Windows"
 Check-Command curl "Built into Windows 10+"
 
 # Step 1: Generate JWT Secrets
-Write-Header "📋 Step 1: Generate JWT Secrets"
+Write-Header "Step 1: Generate JWT Secrets"
 $JwtSecret = [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))
 $JwtRefreshSecret = [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Minimum 0 -Maximum 256 }))
 
@@ -62,7 +56,7 @@ Write-Warning "Save these! You'll need them for Fly.io secrets."
 Write-Host ""
 
 # Step 2: GitHub Repository
-Write-Header "📋 Step 2: GitHub Repository"
+Write-Header "Step 2: GitHub Repository"
 $RepoUrl = Read-Host "GitHub repo URL (e.g., https://github.com/username/hotelops)"
 if (-not $RepoUrl) { Write-ErrorMsg "Repository URL required"; exit 1 }
 
@@ -82,7 +76,7 @@ Write-Success "Pushed to GitHub"
 Write-Host ""
 
 # Step 3: Neon Database
-Write-Header "📋 Step 3: Neon Database"
+Write-Header "Step 3: Neon Database"
 Write-Host "1. Go to https://neon.tech and create project 'hotelops'"
 Write-Host "2. Copy the connection string"
 $DatabaseUrl = Read-Host "Neon connection string (postgresql://...)"
@@ -90,7 +84,7 @@ if (-not $DatabaseUrl) { Write-ErrorMsg "Database URL required"; exit 1 }
 Write-Host ""
 
 # Step 4: Upstash Redis
-Write-Header "📋 Step 4: Upstash Redis"
+Write-Header "Step 4: Upstash Redis"
 Write-Host "1. Go to https://upstash.com and create Redis database 'hotelops-redis'"
 Write-Host "2. Copy the Redis URL (use TCP format: redis://:password@host:port)"
 $RedisUrl = Read-Host "Upstash Redis URL (redis://...)"
@@ -98,7 +92,7 @@ if (-not $RedisUrl) { Write-ErrorMsg "Redis URL required"; exit 1 }
 Write-Host ""
 
 # Step 5: Fly.io API Deployment
-Write-Header "📋 Step 5: Fly.io API Deployment"
+Write-Header "Step 5: Fly.io API Deployment"
 Write-Host "Deploying API to Fly.io..."
 flyctl deploy --remote-only --app hotelops-api
 
@@ -119,7 +113,7 @@ Write-Success "API deployed to https://hotelops-api.fly.dev"
 Write-Host ""
 
 # Step 6: Vercel Web Deployment
-Write-Header "📋 Step 6: Vercel Web Deployment"
+Write-Header "Step 6: Vercel Web Deployment"
 Write-Host "1. Go to https://vercel.com and import your GitHub repo"
 Write-Host "2. Set Root Directory to 'apps/web'"
 Write-Host "3. Add Environment Variables:"
@@ -129,14 +123,14 @@ Write-Host ""
 Read-Host "Press Enter after Vercel deployment completes..."
 
 # Step 7: Update CORS
-Write-Header "📋 Step 7: Update CORS"
+Write-Header "Step 7: Update CORS"
 $VercelUrl = Read-Host "Enter your Vercel URL (e.g., https://hotelops-web.vercel.app)"
 flyctl secrets set CORS_ORIGIN="$VercelUrl" --app hotelops-api
 Write-Success "CORS updated"
 Write-Host ""
 
 # Complete
-Write-Header "🎉 Setup Complete!"
+Write-Header "Setup Complete!"
 Write-Host ""
 Write-Host "Your HotelOps deployment:"
 Write-Host "  Frontend: $VercelUrl"
@@ -155,4 +149,4 @@ Write-Host "  2. Set up SMTP for emails"
 Write-Host "  3. Configure monitoring (Sentry, Logtail)"
 Write-Host "  4. Set up backups for Neon"
 Write-Host ""
-Write-Success "Happy hotel managing! 🏨"
+Write-Success "Happy hotel managing!"
