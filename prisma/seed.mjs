@@ -152,7 +152,7 @@ async function main() {
 
   // ---- BUILDINGS, FLOORS, ROOMS ----
   const roomsByHotel = {};
-  for (const def of hotels) {
+  for (const [hi, def] of hotels.entries()) {
     roomsByHotel[def.hotel.id] = [];
     for (let b = 0; b < def.buildings; b++) {
       const building = await prisma.building.create({
@@ -163,9 +163,9 @@ async function main() {
           data: { buildingId: building.id, name: `Floor ${f}`, number: f },
         });
         for (let r = 1; r <= def.roomsPerFloor; r++) {
-          // Building prefix keeps room numbers unique per hotel (the unique key
-          // is hotelId + roomNumber); without it each building reuses 0101-0808.
-          const roomNumber = `${b + 1}${f}${String(r).padStart(2, '0')}`;
+          // Room numbers are unique per hotel AND per organization, so the
+          // number encodes hotel, building, floor and room: 1|1|1|01 -> 11101.
+          const roomNumber = `${hi + 1}${b + 1}${f}${String(r).padStart(2, '0')}`;
           const rt = pick(roomTypes);
           const room = await prisma.room.create({
             data: {
@@ -781,7 +781,7 @@ async function main() {
     };
     const m = await prisma.maintenanceRequest.create({
       data: {
-        requestNumber: `MT-${YEAR}-${String(rnd(1, 400)).padStart(4, '0')}`,
+        requestNumber: `MT-${YEAR}-${String(i + 1).padStart(4, '0')}`,
         organizationId: org.id,
         hotelId: roomDef ? roomDef.room.hotelId : hotels[0].hotel.id,
         roomId: roomDef ? roomDef.room.id : null,
