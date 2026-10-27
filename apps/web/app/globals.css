@@ -57,3 +57,65 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ---------- Login screen ---------- */
+
+@keyframes login-aurora {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(28px, -32px, 0) scale(1.08);
+  }
+}
+
+@keyframes login-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@layer utilities {
+  .login-grid {
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+    background-size: 64px 64px;
+    -webkit-mask-image: radial-gradient(ellipse at 30% 20%, black, transparent 78%);
+    mask-image: radial-gradient(ellipse at 30% 20%, black, transparent 78%);
+  }
+
+  .login-surface {
+    background-image: radial-gradient(
+        120% 100% at 100% 0%,
+        hsl(var(--primary) / 0.07),
+        transparent 45%
+      ),
+      radial-gradient(100% 100% at 0% 100%, hsl(var(--primary) / 0.05), transparent 55%);
+  }
+
+  .animate-aurora {
+    animation: login-aurora 18s ease-in-out infinite;
+  }
+
+  .animate-aurora-slow {
+    animation: login-aurora 26s ease-in-out infinite reverse;
+  }
+
+  .animate-fade-up {
+    animation: login-fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-aurora,
+  .animate-aurora-slow,
+  .animate-fade-up {
+    animation: none !important;
+  }
+}
