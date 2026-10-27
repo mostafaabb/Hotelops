@@ -24,9 +24,11 @@ export class ApiError extends Error {
   }
 }
 
-// Public deployment URLs are not secrets - the browser must know where the API
-// lives. They are used as fallbacks so the build works without dashboard env
-// vars; setting NEXT_PUBLIC_API_URL / NEXT_PUBLIC_WS_URL still overrides them.
+// The browser must know where the API lives; these are public URLs, not secrets.
+// Production builds always use the Render host below, because the Vercel
+// dashboard still holds stale values for NEXT_PUBLIC_API_URL / NEXT_PUBLIC_WS_URL
+// and Vercel blocks editing them (public prefix warning). Local development can
+// still override via an .env.local file.
 const PRODUCTION_API_URL = 'https://hotelops-1-x605.onrender.com/api/v1';
 const PRODUCTION_WS_URL = 'https://hotelops-1-x605.onrender.com';
 const LOCAL_API_URL = 'http://localhost:4000/api/v1';
@@ -34,11 +36,13 @@ const LOCAL_WS_URL = 'http://localhost:4000';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || (isProduction ? PRODUCTION_API_URL : LOCAL_API_URL);
+export const API_URL = isProduction
+  ? PRODUCTION_API_URL
+  : process.env.NEXT_PUBLIC_API_URL || LOCAL_API_URL;
 
-export const WS_URL =
-  process.env.NEXT_PUBLIC_WS_URL || (isProduction ? PRODUCTION_WS_URL : LOCAL_WS_URL);
+export const WS_URL = isProduction
+  ? PRODUCTION_WS_URL
+  : process.env.NEXT_PUBLIC_WS_URL || LOCAL_WS_URL;
 
 const TOKEN_KEY = 'hotelops.access_token';
 const REFRESH_KEY = 'hotelops.refresh_token';
